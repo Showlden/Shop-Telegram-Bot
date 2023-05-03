@@ -26,6 +26,17 @@ class Database:
 	def set_item(self, photo_id, name, price):
 		with self.connect:
 			self.cursor.execute("INSERT INTO clothes (photo_id, name, price) VALUES(?, ?, ?)", (photo_id, name, price))
-	
 
+	def update_photo(self, id, new_photo_id):
+		with self.connect:
+			self.cursor.execute(f"UPDATE clothes SET photo_id='{new_photo_id}' WHERE id={id}")
+	
+	def update_name(self, id, new_name):
+		with self.connect:
+			self.cursor.execute(f"UPDATE clothes SET name='{new_name}' WHERE id={id}")
+	
+	def update_price(self, id, new_price):
+		with self.connect:
+			self.cursor.execute(f"UPDATE clothes SET price='{new_price}' WHERE id={id}")
+	
 
