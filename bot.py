@@ -274,6 +274,11 @@ async def load_new_desc(message:Message, state:FSMContext):
 	await message.answer("Описание товара успешно обновлено")
 	await state.finish()
 
+async def delete_item(message: Message):
+	db.delete_item(id=SelectedCardIDEdit)
+	await message.answer("Товар успешно удален")
+
+
 '''Обработчик callback запросов'''
 
 @dp.callback_query_handler(lambda call: True, state='*')
@@ -318,6 +323,8 @@ async def callback_worker(call: CallbackQuery, state: FSMContext):
 		await edit_price(call.message)
 	if call.data == "edit_desc":
 		await edit_desc(call.message)
+	if call.data == "delete":
+		await delete_item(call.message)
 
 '''Запуск бота'''
 

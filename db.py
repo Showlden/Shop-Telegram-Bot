@@ -27,6 +27,16 @@ class Database:
 	def set_item(self, photo_id, name, price, desc):
 		with self.connect:
 			self.cursor.execute("INSERT INTO clothes (photo_id, name, price, desc) VALUES(?, ?, ?, ?)", (photo_id, name, price, desc))
+	
+	def delete_item(self, id):
+		with self.connect:
+			#Выбираем поле которое хотим удалить и сохраняем его в переменную
+			self.cursor.execute(f"SELECT id FROM clothes WHERE id = {id}")
+			file_id = self.cursor.fetchone()[0]
+			#Удаляем поле
+			self.cursor.execute(f"DELETE FROM clothes WHERE id={file_id}")
+			#Обновляем значения всех id на 1
+			self.cursor.execute(f"UPDATE clothes SET id=id-1 WHERE id>{file_id}")
 
 	def update_photo(self, id, new_photo_id):
 		with self.connect:
