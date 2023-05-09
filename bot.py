@@ -19,9 +19,11 @@ class ItemStatesGroup(StatesGroup):
 	photo = State()
 	name = State()
 	price = State()
+	desc = State()
 	edit_photo = State()
 	edit_name = State()
 	edit_price = State()
+	edit_desc = State()
 
 '''Старт'''
 
@@ -65,13 +67,13 @@ async def GetCard(message, edit=None):
 			if db.get_len_items() != 1:
 				await bot.send_photo(chat_id=message.chat.id, 
 						photo=data[1], 
-						caption=f"""<b>Название:</b>: {data[2]} \n<b>Цена:</b> {data[3]}""", 
+						caption=f"""<b>Название:</b>: {data[2]} \n<b>Цена:</b> {data[3]} \n<b>Описание</b>: {data[4]}""", 
 						reply_markup=board,
 						parse_mode="html")	
 			else:
 				await bot.send_photo(chat_id=message.chat.id, 
 						photo=data[1], 
-						caption=f"""<b>Название:</b>: {data[2]} \n<b>Цена:</b> {data[3]}""", 
+						caption=f"""<b>Название:</b>: {data[2]} \n<b>Цена:</b> {data[3]} \n<b>Описание</b>: {data[4]}""", 
 						parse_mode="html")	
 		else:
 			await bot.edit_message_media(chat_id=message.chat.id, 
@@ -79,7 +81,7 @@ async def GetCard(message, edit=None):
 										media=InputMediaPhoto(media=data[1]))
 			await bot.edit_message_caption(chat_id=message.chat.id, 
 		                                message_id=message.message_id, 
-		                                caption=f"""<b>Название:</b>: {data[2]} \n<b>Цена:</b> {data[3]}""",
+		                                caption=f"""<b>Название:</b>: {data[2]} \n<b>Цена:</b> {data[3]} \n<b>Описание</b>: {data[4]}""",
 		                                parse_mode="html",
 		                                reply_markup=board)
 
@@ -142,16 +144,25 @@ async def load_name(message: Message, state: FSMContext):
 async def load_price(message: Message, state: FSMContext):
 	async with state.proxy() as data:
 		data['price'] = message.text
+
+	await message.reply("Введите описание товара", reply_markup=get_cancel_kb())
+	await ItemStatesGroup.next()
+
+@dp.message_handler(state=ItemStatesGroup.desc)
+async def load_desc(message: Message, state: FSMContext):
+	async with state.proxy() as data:
+		data["desc"] = message.text
 		await bot.send_photo(chat_id=message.chat.id, 
 			photo=data['photo'], 
-			caption=f"""<b>Название:</b>: {data['name']} \n<b>Цена:</b> {data['price']}""", 
+			caption=f"""<b>Название:</b>: {data['name']} \n<b>Цена</b>: {data['price']} \n<b>Описание</b>: {data['desc']}""", 
 			parse_mode="html",
 			reply_markup=ReplyKeyboardRemove())
 
 	db.set_item(
 		photo_id=data['photo'],
 		name=data['name'],
-		price=data['price'])
+		price=data['price'],
+		desc=data["desc"])
 	await message.reply("Товар успешно добавлен")
 	await state.finish()
 
@@ -159,20 +170,21 @@ async def load_price(message: Message, state: FSMContext):
 
 SelectedCardIDEdit = 1
 async def editing(message: Message, edit=None):
-	edit_menu = InlineKeyboardMarkup(row_width=3)
+	edit_menu = InlineKeyboardMarkup(row_width=4)
 	edit_photo = InlineKeyboardButton("Фото", callback_data="edit_photo")
 	edit_name = InlineKeyboardButton("Название", callback_data="edit_name")
 	edit_price = InlineKeyboardButton("Цена", callback_data="edit_price")
+	edit_desc = InlineKeyboardButton("Описание", callback_data="edit_desc")
 	delete = InlineKeyboardButton("Удалить", callback_data="delete")
 	backcard = types.InlineKeyboardButton(text="<===", callback_data="backEdit")
 	nextcard = types.InlineKeyboardButton(text="===>", callback_data="nextEdit")
 
-	edit_menu.add(edit_photo, edit_name, edit_price, delete)
+	edit_menu.add(edit_photo, edit_name, edit_price, edit_desc, delete)
 	if db.get_len_items() == 1:
 		pass
 	elif SelectedCardIDEdit == 1:
 		edit_menu.add(nextcard)
-	elif SelectedCardID == db.get_len_items():
+	elif SelectedCardIDEdit == db.get_len_items():
 		edit_menu.add(backcard)
 	else:
 		edit_menu.add(backcard, nextcard)
@@ -190,7 +202,7 @@ async def editing(message: Message, edit=None):
 		if not edit:
 			await bot.send_photo(chat_id=message.chat.id, 
 					photo=data[1], 
-					caption=f"""<b>Название:</b>: {data[2]} \n<b>Цена:</b> {data[3]}""", 
+					caption=f"""<b>Название:</b>: {data[2]} \n<b>Цена:</b> {data[3]} \n<b>Описание</b>: {data[4]}""", 
 					reply_markup=edit_menu,
 					parse_mode="html")	
 
@@ -200,7 +212,7 @@ async def editing(message: Message, edit=None):
 										media=InputMediaPhoto(media=data[1]))
 			await bot.edit_message_caption(chat_id=message.chat.id, 
 		                                message_id=message.message_id, 
-		                                caption=f"""<b>Название:</b>: {data[2]} \n<b>Цена:</b> {data[3]}""",
+		                                caption=f"""<b>Название:</b>: {data[2]} \n<b>Цена:</b> {data[3]} \n<b>Описание</b>: {data[4]}""",
 		                                parse_mode="html",
 		                                reply_markup=edit_menu)
 
@@ -237,7 +249,7 @@ async def load_new_name(message: Message, state: FSMContext):
 	await state.finish()
 
 async def edit_price(message: Message, edit=None):
-	await message.answer("Пришлите новое название товара", reply_markup=get_cancel_kb())
+	await message.answer("Пришлите новую цену товара", reply_markup=get_cancel_kb())
 	await ItemStatesGroup.edit_price.set()
 
 @dp.message_handler(content_types=["text"], state=ItemStatesGroup.edit_price)
@@ -246,7 +258,20 @@ async def load_new_price(message: Message, state: FSMContext):
 		data['edit_price'] = message.text
 
 	db.update_price(id=SelectedCardIDEdit, new_price=data["edit_price"])
-	await message.answer("Название товара успешно обновлено", reply_markup=ReplyKeyboardRemove())
+	await message.answer("Цена товара успешно обновлена", reply_markup=ReplyKeyboardRemove())
+	await state.finish()
+
+async def edit_desc(message: Message, edit=None):
+	await message.answer("Пришлите новое описание товара", reply_markup=get_cancel_kb())
+	await ItemStatesGroup.edit_desc.set()
+
+@dp.message_handler(content_types=["text"], state=ItemStatesGroup.edit_desc)
+async def load_new_desc(message:Message, state:FSMContext):
+	async with state.proxy() as data:
+		data["edit_desc"] = message.text
+
+	db.update_desc(id=SelectedCardIDEdit, new_desc=data["edit_desc"])
+	await message.answer("Описание товара успешно обновлено")
 	await state.finish()
 
 '''Обработчик callback запросов'''
@@ -291,6 +316,8 @@ async def callback_worker(call: CallbackQuery, state: FSMContext):
 		await edit_name(call.message)
 	if call.data == "edit_price":
 		await edit_price(call.message)
+	if call.data == "edit_desc":
+		await edit_desc(call.message)
 
 '''Запуск бота'''
 

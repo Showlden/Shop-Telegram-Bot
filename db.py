@@ -8,7 +8,8 @@ class Database:
 									id INTEGER PRIMARY KEY,
 									photo_id TEXT,
 									name TEXT,
-									price TEXT)""")
+									price TEXT,
+									desc TEXT)""")
 		self.connect.commit()
 
 	def get_item(self, item_id):
@@ -23,9 +24,9 @@ class Database:
 			data = self.cursor.fetchall()
 		return len(data)
 
-	def set_item(self, photo_id, name, price):
+	def set_item(self, photo_id, name, price, desc):
 		with self.connect:
-			self.cursor.execute("INSERT INTO clothes (photo_id, name, price) VALUES(?, ?, ?)", (photo_id, name, price))
+			self.cursor.execute("INSERT INTO clothes (photo_id, name, price, desc) VALUES(?, ?, ?, ?)", (photo_id, name, price, desc))
 
 	def update_photo(self, id, new_photo_id):
 		with self.connect:
@@ -39,4 +40,8 @@ class Database:
 		with self.connect:
 			self.cursor.execute(f"UPDATE clothes SET price='{new_price}' WHERE id={id}")
 	
+	def update_desc(self, id, new_desc):
+		with self.connect:
+			self.cursor.execute(f"UPDATE clothes SET desc='{new_desc}' WHERE id={id}")
+
 
